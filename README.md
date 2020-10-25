@@ -1,15 +1,18 @@
-# chipguyOS
+# chipguyOS by chipguyhere
 
-chipguyOS 
+chipguyOS is a bare-bones terminal OS for Arduino that allows an installer to configure I/O pins and utility "programs", in the form of a library.
 
-Bare-bones serial-terminal OS for Arduino, for configuring I/O pins and utility "programs", in the form of a library.  The library provides its services to your sketch, which allows (or regulates) access to the serial configuration prompt by calling (or not calling) ```serialTerminalMonitor()``` from within your ```loop()```.
+The example sketch simply exposes the terminal prompt to the serial port, where features can be configured (such as dispatching pin change events to a network, or receiving them from a network and outputting them on pins).
 
-License: GPLv3
+Your custom sketch can add additional functionality.  Your sketch can allow or regulate access to the serial configuration prompt simply by deciding whether and when to continue to pass serial I/O to the serial terminal methods in the library.
+
+This library is licensed under the GNU Public License, version 3 (see the included LICENSE file for details).
 
 ## Features
 
 * A "pin map" for assigning built-in features to specific pins, through the terminal prompt
 * A simplified EEPROM file system for holding configuration settings, the pin map, and other persistent variables for your sketch (including wear leveling for counters and things that change frequently)
+* A simplified event dispatch system
 * A simplified networking system based around 32-byte messages, sendable over nRF24L01+ packet radio, infrared, I2C, SPI, serial, or Ethernet
 
 ## Pin map features
