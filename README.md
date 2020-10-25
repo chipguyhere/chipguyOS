@@ -2,7 +2,7 @@
 
 chipguyOS is a bare-bones terminal OS for Arduino that allows an installer to configure I/O pins and utility "programs".  In this context, an "installer" is someone who is unable or uninterested in compiling or sending a sketch to an Arduino board, but is able or willing to connect and configure it through a serial terminal.   chipguyOS is provided in the form of a library to be added to an Arduino sketch, and has been tested on Arduino Uno, Nano, and Mega.
 
-The example sketch (provided) simply exposes the terminal prompt to the serial port, where features can be configured (such as dispatching pin change events to a network, or receiving them from a network and outputting them on pins).
+The example sketch, as provided, is far more useful than simply a demonstration, as it exposes the library's terminal prompt to the Arduino serial port, where the library's communication and dispatch features can be provisioned to make a device that's able to send events from "point A" to "point B".
 
 Your custom sketch can add additional functionality.  Your sketch can allow or regulate access to the serial configuration prompt simply by deciding whether and when to continue to pass serial I/O to the serial terminal methods in the library.
 
