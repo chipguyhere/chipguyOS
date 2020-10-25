@@ -20,7 +20,7 @@ The lowest two bits of the first control byte describe the first word.  The two 
 * 01 = Word is an 8- or 1- bit incrementer to the count.
 * 00 = Disregard the word.
 
-If more than one word is flagged as being the count, the lowest numbered word is the count.
+If more than one word is flagged as being the count, the lowest index word is the count.
 
 When the control byte is erased, it is 0xFF, and the first word becomes the count.  The first word (word[0]) is initialized to contain the
 initial count.  The counter is consistent and ready.
