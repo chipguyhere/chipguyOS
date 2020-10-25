@@ -8,15 +8,19 @@ The counter requires EEPROM space of at least four 32-bit words, plus one contro
 the contents of that word.
 
 A design goal of the counter is that it stays consistent if there are "tears" (loss of power between successive byte writes).
+We assume we have granularity to turn off bits in a single byte as an atomic operation,
+as well as to erase a byte (set it to 0xFF) in a single operation.
 
 ## Control byte
 
 The lowest two bits of the first control byte describe the first word.  The two higher bits describe the next word, and so on.
 
-* 11 = Word is the count.  Applies only to the first word.
-* 10 = Word is a component of the count
-* 01 = Word is an incrementer to the count.
+* 11 = Word is the count, but do not apply incrementers yet.  (Their control bits are still being zeroed)
+* 10 = Word plus all incrementers is the count.
+* 01 = Word is an 8- or 1- bit incrementer to the count.
 * 00 = Disregard the word.
+
+If more than one word is flagged as being the count, the lowest numbered word is the count.
 
 When the control byte is erased, it is 0xFF, and the first word becomes the count.  The first word (word[0]) is initialized to contain the
 initial count.  The counter is consistent and ready.
