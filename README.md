@@ -1,6 +1,6 @@
 # chipguyOS by chipguyhere
 
-chipguyOS is a bare-bones terminal OS for Arduino that allows an installer to configure I/O pins and utility "programs".  In this context, an "installer" is someone who is unable or uninterested in compiling or sending a sketch to an Arduino board, but is able or willing to connect and configure it through a serial terminal.   chipguyOS is provided in the form of a library to be added to an Arduino sketch, and has been tested on Arduino Uno, Nano, and Mega.
+chipguyOS is a bare-bones terminal OS for Arduino that allows an installer to configure I/O pins and utility "programs".  In this context, an "installer" is someone who is unable or uninterested in compiling or sending a sketch to an Arduino board, but is able or willing to connect and configure it through a generic serial terminal program.   chipguyOS is provided in the form of a library to be added to an Arduino sketch, and has been tested on Arduino Uno, Nano, and Mega.
 
 The example sketch, as provided, is far more useful than simply a demonstration, as it exposes the library's terminal prompt to the Arduino serial port, where the library's communication and dispatch features can be provisioned to make a device that's able to send events from "point A" to "point B".
 
