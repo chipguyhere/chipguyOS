@@ -18,20 +18,20 @@ The lowest two bits of the first control byte describe the first word.  The two 
 * 11 = Word is the count, but do not apply incrementers yet.  (Their control bits are still being zeroed)
 * 10 = Word is the count, and incrementers can now apply.
 * 01 = Word is an incrementer.
-* 00 = Disregard the word.
+* 00 = Disregard the word. 
 
-If more than one word is flagged as being the count, the lowest index word is the count.
+If more than one word is flagged as being the count, the lowest index word that is not 0xFFFFFFFF is the count.
 
 When the control byte is erased, it is 0xFF, and the first word becomes the count.  The first word (word[0]) is initialized to contain the
 initial count.  The counter is consistent and ready.
 
-Next, word[1] is erased to 0xFFFFFFFF.  Then the control byte is set so the second word becomes an incrementer.  (0b11101111).
+Next, word[1] is erased to 0xFFFFFFFF.  Then the control byte is set so word[1] becomes an incrementer.  (0b11101111).
 
 ## Incrementers
 
 Incrementers are for adding 1 and other small numbers to the count.  When erased, the value is 0xFFFFFFFF and has no influence on the count.
 
-To add 1, clear the least significant bit that is still a 1.  0xFFFFFFFE adds one.  0xFFFFFFFC adds two.
+To add 1, clear the least significant bit that is still a 1.  0xFFFFFFFE adds one.  0xFFFFFFFC adds another one.
 
 We can write bigger numbers to increment the count by starting from the most significant byte that is available.  Bytes are "available" when the counting of ones has not consumed the most significant bit below the byte.
 
@@ -53,10 +53,24 @@ We can write bigger numbers to increment the count by starting from the most sig
 We can continue to burn the candle from both ends until we run out of bits.  When we do, we must start either a new incrementer, or write a new
 count.
 
-## Writing a new count
+## Writing a new word
 
-To write a new count, we select an unused word, write the count, verify it is written correctly, and then update the control byte to disregard
-the words that are no longer part of the count.
+We will create a new incrementer when:
+* the current incrementer is nonexistent or not enough to hold the increase in count, and
+* there is still at least 1 word available to write a new complete count before needing to overwrite the existing starting count.
+
+We will write a whole new count when:
+* we are writing the word just before the existing count starting point.
+* when we need to decrement in any way
+* when we need a new incrementer but we have an increase greater than 127 to write to it.
+
+To write a new count, we
+* select the next unused word
+* write the count to it
+* verify it is written correctly, and if not, go back two steps
+* update the control byte to disregard earlier count and all existing incrementers
+* erase all words other than the new count
+* update the control byte
 
 
 
