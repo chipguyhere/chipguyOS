@@ -26,8 +26,8 @@ word[0] has precedence, and word[1] can only be the starting count when word[0]'
 When the control byte is erased, it is 0xFF, and the first word becomes the count.  The first word (word[0]) is initialized to contain the
 initial count.  The counter is consistent.  Then all remaining words are erased, as are their control bits.
 
-Next, the first control byte is updated to 0b10110111 so the first word becomes an incrementer (its initial value of 0xFFFFFFFF represents zero
-increment) and incrementers are enabled.
+Next, the first control byte is updated to 0b10111111 so incrementers are allowed.  Creating the first incrementer will update the
+first control byte to either 0b10111011 or 0b10110111 depending on whether the first incrementer is large or small.
 
 
 ## Small incrementers
@@ -80,15 +80,15 @@ which adds a 32-bit value to the count.
 
 ## When the incrementer space is exhausted
 * If the starting count is at word[0]:
-** Write the new count at word[1].
-** Clear word[0]'s control bits to 00 so word[1] becomes the counter in effect.
-** Erase all the incrementers.
-** Continue below as the starting count is at word[1].
+  * Write the new count at word[1].
+  * Clear word[0]'s control bits to 00 so word[1] becomes the counter in effect.
+  * Erase all the incrementers.
+  * Continue below, now that the starting count is at word[1].
 * If the starting count is at word[1]:
-** Erase word[0] and copy the same starting count there.
-** Erase all the control bytes (last to first) 
-** When the first control byte is erased, word[0] now contains the active count.
-** Update the first control byte to 0b10110111 so that incrementers are allowed again and the first one is enabled.
+  * Erase word[0] and copy the same starting count there.
+  * Erase all the control bytes (last to first) 
+  * When the first control byte is erased, word[0] now contains the active count.
+  * Update the first control byte to 0b10111111 so that incrementers are allowed again
 
 
 
