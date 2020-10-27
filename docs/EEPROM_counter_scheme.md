@@ -15,12 +15,20 @@ as well as to erase a byte (set it to 0xFF) in a single operation.
 
 The lowest two bits of the first control byte describe the first word.  The two higher bits describe the next word, and so on.
 
-* 11 = Word is the count, but do not apply incrementers yet.  (Their control bits are still being zeroed)
+* 11 = Word's current purpose depends on its position (see below)
+//* 11 = Word is the count, but do not apply incrementers yet.  (Their control bits are still being zeroed)
 * 10 = Word is the count, and incrementers can now apply.
 * 01 = Word is an incrementer.
 * 00 = Disregard the word. 
 
-If more than one word is flagged as being the count, the lowest index word that is not 0xFFFFFFFF is the count.
+The meaning of 11 varies by position to ensure consistency when a control byte is erased.  A word whose control bits are 11 is:
+* word[0] - the starting count
+* word[1 and beyond - disregarded the word.
+
+
+* 10 in word[2] and beyond - an incrementer that adds a 32-bit quantity to the current count (overflowing back to 0 if applicable... the count is always unsigned)
+
+// if more than one word is flagged as being the count, the lowest index word that is not 0xFFFFFFFF is the count.
 
 When the control byte is erased, it is 0xFF, and the first word becomes the count.  The first word (word[0]) is initialized to contain the
 initial count.  The counter is consistent and ready.
