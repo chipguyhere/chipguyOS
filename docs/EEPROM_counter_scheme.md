@@ -26,8 +26,8 @@ word[0] has precedence, and word[1] can only be the starting count when word[0]'
 When the control byte is erased, it is 0xFF, and the first word becomes the count.  The first word (word[0]) is initialized to contain the
 initial count.  The counter is consistent.  Then all remaining words are erased, as are their control bits.
 
-Next, the first control byte is updated to 0b10111111 so incrementers are allowed.  Creating the first incrementer will update the
-first control byte to either 0b10111011 or 0b10110111 depending on whether the first incrementer is large or small.
+Next, the first control byte is updated to 0b11111110 so incrementers are allowed.  Creating the first incrementer will update the
+first control byte to either 0b11101110 or 0b11011110 depending on whether the first incrementer is large or small.
 
 
 ## Small incrementers
@@ -91,7 +91,7 @@ in the control byte to specify whether the incrementer is large or small.
   * Erase word[0] and copy the same starting count there.
   * Erase all the control bytes (last to first) 
   * When the first control byte is erased, word[0] now contains the active count.
-  * Update the first control byte to 0b10111111 so that incrementers are allowed again
+  * Update the first control byte to 0b11111110 so that incrementers are allowed again
 
 
 
