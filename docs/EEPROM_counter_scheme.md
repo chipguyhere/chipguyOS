@@ -96,6 +96,30 @@ in the control byte to specify whether the incrementer is large or small.
   * Erase all the control bytes (last to first) 
   * When the first control byte is erased, word[0] now contains the active count.
   * Update the first control byte to 0b11111110 so that incrementers are allowed again
+  
+
+## deferred operations
+
+biggest deferred operations are 1) write large incrementer, 2) hard write
+
+large incrementer write
+* write the word (4 bytes change)
+* update the control (1 byte changes)
+
+hard write
+* write the word (4 bytes change)
+* update the start control (1 byte)
+* erase the incrementer control (1 byte per 4 words)
+
+write requiring new incrementer
+* update the start control to allow incrementers (1 byte change)
+* write/erase the new incrementer (4 bytes change)
+* update the incrementer control (1 byte)
+
+each change to the count updates 6 eeprom bytes plus potentially erases the incrementer control.
+
+an index could be: 0xFF start control, 0xFE control[0], 0xFD control[1]... 
+
 
 
 
