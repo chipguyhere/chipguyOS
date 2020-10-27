@@ -63,11 +63,11 @@ be left untouched for recognition as a byte instead of a counter of ones.
 We can continue to burn the candle from both ends until we run out of bits.  When we do, we must start either a new incrementer, or write a new
 count.
 
-## 32-bit incrementers
+## Large (32-bit) incrementers
 
-An incrementer can be written that adds a 32-bit value to the count, overflowing back to zero (counters are always unsigned).  This is similar
-to simply writing a new count, but by implementing this as adding a "difference", the existing incrementers do not need to be erased, and can
-be added to by clearing more bits from them.
+A "large" incrementer can be written that adds a 32-bit value to the count, overflowing back to zero (counters are always unsigned).  This is similar
+to simply writing a new count, but by implementing this as adding a "difference", the existing incrementers do not need to be erased.  In addition, bits
+in existing incrementers (as well as the large incrementer) can be opportunistically cleared to add additional values that happen to fit in them.
 
 The value written must be inverted (value XOR 0xFFFFFFFF).  This ensures the default erased value represents zero.
 
@@ -78,10 +78,13 @@ We will create a new incrementer when the existing incrementer(s) cannot hold an
 If the overflow is (3*126) or less, this can be written as a new "small incrementer".  Otherwise a "large incrementer" will be written,
 which adds a 32-bit value to the count.
 
+A new incrementer is added by erasing the next available word (if necessary), verifying that it contains 0xFFFFFFFF, and then clearing a bit
+in the control byte to specify whether the incrementer is large or small.
+
 ## When the incrementer space is exhausted
 * If the starting count is at word[0]:
   * Write the new count at word[1].
-  * Clear word[0]'s control bits to 00 so word[1] becomes the counter in effect.
+  * Clear control bits for word[0] and word[1] to 0010 so word[1] becomes the counter in effect and incrementers are deactivated.
   * Erase all the incrementers.
   * Continue below, now that the starting count is at word[1].
 * If the starting count is at word[1]:
