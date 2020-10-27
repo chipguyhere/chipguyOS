@@ -4,22 +4,26 @@ License: GPLv3 (see /LICENSE for details)
 To implement a 32-bit counter in EEPROM, we exploit the fact that "erasing" a byte sets it to 0xFF and that we can write bits
 to clear them without an erase cycle.
 
-A counter structure takes a multiple of 17 bytes of EEPROM that writes and maintains an incrementing 32-bit number in an
-effort to spread writes and minimize erase cycles.  Each 16 bytes has a "control byte" that tracks how the other 4 bytes
-are being used by the library
 
 A design goal of the counter is that it stays consistent if there are "tears" (loss of power between successive byte writes).
 We assume we have granularity to turn off bits in a single byte as an atomic operation,
 as well as to erase a byte (set it to 0xFF) in a single operation.
 
+## Starting value control byte
+This is designed so one bit is cleared with each operation that changes the starting value.
+* 0xFF, 0xF0 - starting value 0 is the count, and no incrementers apply.
+* 0xFE, 0xE0 - starting value 0 is the count, and incrementers apply.
+* 0xFC, 0xC0 - starting value 1 is the count, and no incrementers apply.
+* 0xF0, 0x80 - starting value 1 is the count, and incrementers apply.
+
 ## Control bytes
 
 The lowest two bits of the first control byte describe the first word.  The two higher bits describe the next word, and so on.
 
-* 11 = The word is the count and no incrementers apply (for word[0]), or ignored as unused space (for any other word).
+* 11 = The word is erased free space.
 * 10 = The word is the starting count before applying incrementers (for word[0] or word[1]), or a 32-bit-sized "large" incrementer (for any other word).
 * 01 = Word is a "small" incrementer.
-* 00 = Disregard the word. 
+* 00 = The word is deleted and should be disregarded and erased.
 
 word[0] has precedence, and word[1] can only be the starting count when word[0]'s control bits are 00 (for disregard).
 
