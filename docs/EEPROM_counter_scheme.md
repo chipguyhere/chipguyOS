@@ -20,7 +20,7 @@ This is designed so one bit is cleared with each operation that changes the star
 
 The lowest two bits of the first control byte describe the first word.  The two higher bits describe the next word, and so on.
 
-* 11 = The word is erased free space.
+* 11 = The word is unused, should be disregarded, and can be erased and used.
 * 10 = The word is the starting count before applying incrementers (for word[0] or word[1]), or a 32-bit-sized "large" incrementer (for any other word).
 * 01 = Word is a "small" incrementer.
 * 00 = The word is deleted and should be disregarded and erased.
