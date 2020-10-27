@@ -16,8 +16,8 @@ as well as to erase a byte (set it to 0xFF) in a single operation.
 
 The lowest two bits of the first control byte describe the first word.  The two higher bits describe the next word, and so on.
 
-* 11 = The word is the starting count before applying incrementers (for word[0]), or ignored as unused space (for any other word).
-* 10 = The word is the starting count before applying incrementers (for word[1]), or a 32-bit-sized "large" incrementer (for any other word).
+* 11 = The word is the count and no incrementers apply (for word[0]), or ignored as unused space (for any other word).
+* 10 = The word is the starting count before applying incrementers (for word[0] or word[1]), or a 32-bit-sized "large" incrementer (for any other word).
 * 01 = Word is a "small" incrementer.
 * 00 = Disregard the word. 
 
