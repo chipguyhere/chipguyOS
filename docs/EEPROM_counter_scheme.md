@@ -4,48 +4,45 @@ License: GPLv3 (see /LICENSE for details)
 To implement a 32-bit counter in EEPROM, we exploit the fact that "erasing" a byte sets it to 0xFF and that we can write bits
 to clear them without an erase cycle.
 
-The counter requires EEPROM space of at least four 32-bit words, plus one control byte per four 32-bit words to describe
-the contents of that word.
-
 A design goal of the counter is that it stays consistent if there are "tears" (loss of power between successive byte writes).
 We assume we have granularity to turn off bits in a single byte as an atomic operation,
 as well as to erase a byte (set it to 0xFF) in a single operation.
 
-## Control byte
+## Control bytes
 
 The lowest two bits of the first control byte describe the first word.  The two higher bits describe the next word, and so on.
 
-* 11 = Word's current purpose depends on its position (see below)
-//* 11 = Word is the count, but do not apply incrementers yet.  (Their control bits are still being zeroed)
-* 10 = Word is the count, and incrementers can now apply.
-* 01 = Word is an incrementer.
+* 11 = The word is the starting count before applying incrementers (for word[0]), or ignored (for any other word).
+* 10 = The word is the starting count before applying incrementers (for word[1]), or a 32-bit-sized "large" incrementer (for any other word).
+* 01 = Word is a "small" incrementer.
 * 00 = Disregard the word. 
 
-The meaning of 11 varies by position to ensure consistency when a control byte is erased.  A word whose control bits are 11 is:
-* word[0] - the starting count
-* word[1 and beyond - disregarded the word.
-
-
-* 10 in word[2] and beyond - an incrementer that adds a 32-bit quantity to the current count (overflowing back to 0 if applicable... the count is always unsigned)
-
-// if more than one word is flagged as being the count, the lowest index word that is not 0xFFFFFFFF is the count.
+word[0] has precedence, and word[1] can only be the starting count when word[0]'s control bits are 00 (for disregard).
 
 When the control byte is erased, it is 0xFF, and the first word becomes the count.  The first word (word[0]) is initialized to contain the
-initial count.  The counter is consistent and ready.
+initial count.  The counter is consistent.  Then all remaining words are erased, as are their control bits.
 
-Next, word[1] is erased to 0xFFFFFFFF.  Then the control byte is set so word[1] becomes an incrementer.  (0b11101111).
+Next, the first control byte is updated to 0b10110111 so the first word becomes an incrementer (its initial value of 0xFFFFFFFF represents zero
+increment) and incrementers are enabled.
 
-## Incrementers
 
-Incrementers are for adding 1 and other small numbers to the count.  When erased, the value is 0xFFFFFFFF and has no influence on the count.
+## Small incrementers
 
-To add 1, clear the least significant bit that is still a 1.  0xFFFFFFFE adds one.  0xFFFFFFFC adds another one.
+Small incrementers are for adding small numbers to the count without rewriting it.  Clearing bits adds some number to the count.  When an incrementer is erased, the value is 0xFFFFFFFF and has zero influence on the count.  It must be activated for use, and becomes active when its corresponding control bits are written with "01" to make it a "small incrementer".
 
-We can write bigger numbers to increment the count by starting from the most significant byte that is available.  Bytes are "available" when the counting of ones has not consumed the most significant bit below the byte.
+In general, to add 1, clear the least significant bit that is still a 1.  0xFFFFFFFE adds one.  0xFFFFFFFC adds another one.
+
+We can write bigger numbers to increment the count by starting from the most significant byte that is available.  Bytes are "available" when the counting of ones starting from the LSB has not consumed the most significant bit below the byte.
 
 * A small number between 1 and 15 can be written in the lower nibble of any unused byte.  Invert it (XOR by 0xF) before doing so.
 * Another number between 1 and 7 can be written in the upper nibble the same way.  The MSB of 1 indicates nibbles.
-* A small number between 16 and 127 can be written to any unused byte.  Invert it (XOR by 0x7F) before doing so.  The MSB of 0 indicates a byte.
+* A small number between 16 and 126 can be written to any unused byte.  Invert it (XOR by 0x7F) before doing so.  The MSB of 0 indicates a byte.
+
+Generally speaking, the four bytes of each word will either contain ones, nibbles, or a byte value, deduced as follows:
+* the last byte is reserved for counting ones.
+* the third byte counts ones only when the last byte contains 0x00, otherwise it is counted as a byte or nibble.
+* the second byte only counts ones when the last two bytes are 0x00 0x00.
+* the first byte only counts ones when all remaining bytes are 0x00.
 
 ```
   0xFFFFFFFF means zero
@@ -61,24 +58,30 @@ We can write bigger numbers to increment the count by starting from the most sig
 We can continue to burn the candle from both ends until we run out of bits.  When we do, we must start either a new incrementer, or write a new
 count.
 
-## Writing a new word
+## 32-bit incrementers
 
-We will create a new incrementer when:
-* the current incrementer is nonexistent or not enough to hold the increase in count, and
-* there is still at least 1 word available to write a new complete count before needing to overwrite the existing starting count.
+An incrementer can be written that adds a 32-bit value to the count, overflowing back to zero (counters are always unsigned).  This is similar
+to simply writing a new count, but by implementing this as adding a "difference", the existing incrementers do not need to be erased, and can
+be added to by clearing more bits from them.
 
-We will write a whole new count when:
-* we are writing the word just before the existing count starting point.
-* when we need to decrement in any way
-* when we need a new incrementer but we have an increase greater than 127 to write to it.
+## Writing a new incrementer
 
-To write a new count, we
-* select the next unused word
-* write the count to it
-* verify it is written correctly, and if not, go back two steps
-* update the control byte to disregard earlier count and all existing incrementers
-* erase all words other than the new count
-* update the control byte
+We will create a new incrementer when the existing incrementer(s) cannot hold an increase in count.
+
+If the overflow is (3*126) or less, this can be written as a new "small incrementer".  Otherwise a "large incrementer" will be written,
+which adds a 32-bit value to the count.
+
+## When the incrementer space is exhausted
+* If the starting count is at word[0]:
+** Write the new count at word[1].
+** Clear word[0]'s control bits to 00 so word[1] becomes the counter in effect.
+** Erase all the incrementers.
+** Continue below as the starting count is at word[1].
+* If the starting count is at word[1]:
+** Erase word[0] and copy the same starting count there.
+** Erase all the control bytes (last to first) 
+** When the first control byte is erased, word[0] now contains the active count.
+** Update the first control byte to 0b10110111 so that incrementers are allowed again and the first one is enabled.
 
 
 
